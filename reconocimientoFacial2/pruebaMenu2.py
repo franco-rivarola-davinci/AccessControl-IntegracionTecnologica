@@ -1,10 +1,10 @@
+from tkinter import Widget
 import cv2
 import kivy
 from kivy.app import App
 from kivy.clock import Clock
 from kivy.graphics.texture import Texture
 from kivy.uix.boxlayout import BoxLayout
-from kivy.uix.anchorlayout import AnchorLayout
 from kivy.uix.button import Button
 from kivy.uix.image import Image
 from kivy.uix.label import Label
@@ -21,14 +21,16 @@ class MenuPrincipal(BoxLayout):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
-        self.orientation = 'vertical'
-
         # Agregar botones
         solicitar_acceso_button = Button(text="Solicitar acceso")
         solicitar_acceso_button.bind(on_press=self.solicitar_acceso)
-
+        solicitar_acceso_button.size_hint = (1, 0.2)
+        solicitar_acceso_button.pos_hint = {'x':0.5, 'y':0.4}
+    
         ingresar_usuarios_button = Button(text="Crear usuario")
         ingresar_usuarios_button.bind(on_press=self.crear_usuario)
+        ingresar_usuarios_button.size_hint = (1, 0.2)
+        ingresar_usuarios_button.pos_hint = {'x':0.5, 'y':0.4}
 
         # Agregar botones al layout
         self.add_widget(solicitar_acceso_button)
@@ -148,25 +150,38 @@ class SolicitarAccesoLayout(BoxLayout):
             if not find : 
                 self.status_label.text = "No se encontraron coincidencias"
 
-class CrearUsuario(AnchorLayout):
+class CrearUsuario(BoxLayout):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
+
         layout = BoxLayout(orientation='vertical')
-        
-    
+
+        # Botón volver al menú anclado arriba
         volver_button = Button(text="Volver al menu")
-        volver_button.size_hint = (1, 0.1)
-        volver_button.pos_hint = {'x':0, 'y':0}
+        volver_button.size_hint = (1, 0.2)
+        volver_button.pos_hint = {'x': 0, 'top': 1}
         volver_button.bind(on_press=self.volver_menu_principal)
         layout.add_widget(volver_button)
 
-        textinput = TextInput(password='Ingrese la contraseña', multiline=False)
+        # Espacio vacío con una altura de 50dp
+        spacer = BoxLayout(size=(1, 1))  # altura de 50 píxeles       
+        layout.add_widget(spacer)
+
+        # TextInput centrado
+        textinput = TextInput(hint_text='Ingrese la contraseña', password = True, multiline=False, padding=(0, 15, 0, 0))
         textinput.bind(on_text_validate=self.verificar_password)
-        textinput.size_hint = (1, 0.1)
-        textinput.pos_hint = {'x':0, 'y':0}
+        textinput.size_hint = (0.5, 0.2)
+        textinput.pos_hint = {'center_x': 0.5, 'center_y': 0.5}
+        textinput.halign = 'center'
+        textinput.valign = 'middle' 
         layout.add_widget(textinput)
 
+        spacer = BoxLayout(size=(1, 1))  # altura de 50 píxeles       
+        layout.add_widget(spacer)
+
         self.add_widget(layout)
+
+
 
     def volver_menu_principal(self, instance):
         # Cambiar al layout del menú principal
@@ -192,16 +207,6 @@ class CrearUsuario(AnchorLayout):
             self.image = Image()
             layout.add_widget(self.image)
 
-            # Crear un label para mostrar el estado del acceso
-            self.status_label = Label(text='Estado de acceso', size_hint=(1, 0.1), height=30, size_hint_min_y=30, size_hint_max_y=30)   
-            layout.add_widget(self.status_label)
-
-            textinput = TextInput(multiline=False)
-            textinput.size_hint = (1, 0.1)
-            textinput.pos_hint = {'x':0, 'y':0}
-            layout.add_widget(textinput)
-
-
             # Crear un botón para tomar una foto
             button = Button(text="Tomar foto")
             button.size_hint = (1, 0.1)
@@ -222,10 +227,8 @@ class CrearUsuario(AnchorLayout):
                     texture = Texture.create(size=(frame.shape[1], frame.shape[0]), colorfmt='bgr')
                     texture.blit_buffer(buf, colorfmt='bgr', bufferfmt='ubyte')
                     self.image.texture = texture
-
             
             Clock.schedule_interval(update_camera_preview, 1.0/30.0)
-
             self.add_widget(layout)
 
                 
@@ -235,23 +238,58 @@ class CrearUsuario(AnchorLayout):
             self.add_widget(MenuPrincipal())
             
     def take_photo(self, instance):
-        nombre = instance.text
+        
         ret, frame = self.capture.read()
         cv2.imwrite('nuevoUsuario.jpg', frame)
         print("Foto tomada!") 
+        self.capture.release()
 
-        image_base_path = Path("./")
-        image_path = image_base_path / "nuevoUsuario.jpg"
+        self.clear_widgets()
+        layout = BoxLayout(orientation='vertical')
 
-        # The only mandatory parameter for a person is images
-        # If id is unspecified, it will be auto-generated
-        # If name is unspecified, it will be set to the person's id
-        person = PersonBase([image_path], name=nombre)
-        person = sdk.persons.create(person)
+        volver_button = Button(text="Volver al menu")
+        volver_button.size_hint = (1, 0.1)
+        volver_button.pos_hint = {'x':0, 'y':0}
+        volver_button.bind(on_press=self.volver_menu_principal)
+        layout.add_widget(volver_button)
+
+        textinput = TextInput(hint_text="Ingrese su nombre", multiline=False)
+        textinput.bind(on_text_validate=self.verificar_nombre)
+        textinput.size_hint = (1, 0.1)
+        textinput.pos_hint = {'x':0, 'y':0}
+        layout.add_widget(textinput)
+
+        self.add_widget(layout)
+
+    def verificar_nombre(self, instance):
+         nombre = instance.text
+         if nombre != "":
+         ### Crear persona
+            image_base_path = Path("./")
+            image_path = image_base_path / "nuevoUsuario.jpg"
+            person = PersonBase([image_path], name=nombre)
+            person = sdk.persons.create(person)
+            print("Usuario creado!") 
+
+            self.clear_widgets()
+            layout = BoxLayout(orientation='vertical')
+
+            volver_button = Button(text="Volver al menu")
+            volver_button.size_hint = (1, 0.1)
+            volver_button.pos_hint = {'x':0, 'y':0}
+            volver_button.bind(on_press=self.volver_menu_principal)
+            layout.add_widget(volver_button)
+
+            self.image = Image(source='./nuevoUsuario.jpg')
+            layout.add_widget(self.image)
+
+            self.status_label = Label(text='Usuario creado con exito, bienvenido ' + nombre , size_hint=(1, 0.1), height=30, size_hint_min_y=30, size_hint_max_y=30)   
+            layout.add_widget(self.status_label)
 
 
+            self.add_widget(layout)
 
-        
+
 class MainApp(App):
     def build(self):
         # Crear ScreenManager
