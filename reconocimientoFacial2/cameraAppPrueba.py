@@ -1,4 +1,3 @@
-from opencv.fr.persons.schemas import PersonBase
 from opencv.fr.search.schemas import VerificationRequest
 from openCvConfig import *
 import cv2
@@ -8,9 +7,7 @@ from kivy.uix.image import Image
 from kivy.uix.boxlayout import BoxLayout
 from kivy.clock import Clock
 from kivy.graphics.texture import Texture
-
-
-
+from kivy.uix.label import Label
 
 class CameraApp(App): 
 
@@ -50,9 +47,6 @@ class CameraApp(App):
         ret, frame = self.capture.read()
         cv2.imwrite('foto.jpg', frame)
         print("Foto tomada!")
-        
-        self.capture.release()
-        self.stop()
  
         personas = sdk.persons.list()
         cantidadPersonas = personas.count 

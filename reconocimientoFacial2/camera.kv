@@ -1,0 +1,13 @@
+<RootWidget>:
+    BoxLayout:
+        orientation: 'vertical'
+        Label:
+            id: status_label
+            text: "Status"
+        Button:
+            text: "Tomar foto"
+            size_hint: (1, 0.1)
+            pos_hint: {'x':0, 'y':0}
+            on_press: app.take_photo()
+        Image:
+            id: img
