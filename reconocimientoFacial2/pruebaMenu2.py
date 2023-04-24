@@ -4,18 +4,18 @@ from kivy.app import App
 from kivy.clock import Clock
 from kivy.graphics.texture import Texture
 from kivy.uix.boxlayout import BoxLayout
+from kivy.uix.anchorlayout import AnchorLayout
 from kivy.uix.button import Button
 from kivy.uix.image import Image
 from kivy.uix.label import Label
 from opencv.fr.search.schemas import VerificationRequest
-from opencv.fr.persons.schemas import PersonOrderBy
-from opencv.fr.schemas import SortOrder
 from openCvConfig import *
 import cv2
 from kivy.lang import Builder
 from kivy.uix.screenmanager import Screen, ScreenManager
-from kivy.uix.widget import Widget
 from kivy.uix.textinput import TextInput
+from pathlib import Path
+from opencv.fr.persons.schemas import PersonBase
 
 class MenuPrincipal(BoxLayout):
     def __init__(self, **kwargs):
@@ -148,13 +148,12 @@ class SolicitarAccesoLayout(BoxLayout):
             if not find : 
                 self.status_label.text = "No se encontraron coincidencias"
 
-class CrearUsuario(BoxLayout):
+class CrearUsuario(AnchorLayout):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-
         layout = BoxLayout(orientation='vertical')
         
-        # Crear el botón para guardar el usuario
+    
         volver_button = Button(text="Volver al menu")
         volver_button.size_hint = (1, 0.1)
         volver_button.pos_hint = {'x':0, 'y':0}
@@ -162,17 +161,95 @@ class CrearUsuario(BoxLayout):
         layout.add_widget(volver_button)
 
         textinput = TextInput(password='Ingrese la contraseña', multiline=False)
-        textinput.bind(on_text_validate=self.verificar_contrasena)
-        self.add_widget(textinput)
+        textinput.bind(on_text_validate=self.verificar_password)
+        textinput.size_hint = (1, 0.1)
+        textinput.pos_hint = {'x':0, 'y':0}
+        layout.add_widget(textinput)
 
         self.add_widget(layout)
 
-
-    
     def volver_menu_principal(self, instance):
         # Cambiar al layout del menú principal
         self.clear_widgets()
         self.add_widget(MenuPrincipal())
+
+
+    def verificar_password(self, instance):
+        #######################################
+        password = instance.text
+        if password == "password":
+
+            self.clear_widgets()
+            layout = BoxLayout(orientation='vertical')
+
+            volver_button = Button(text="Volver al menu")
+            volver_button.size_hint = (1, 0.1)
+            volver_button.pos_hint = {'x':0, 'y':0}
+            volver_button.bind(on_press=self.volver_menu_principal)
+            layout.add_widget(volver_button)
+                
+            # Cree un widget de imagen para mostrar la vista previa de la cámara
+            self.image = Image()
+            layout.add_widget(self.image)
+
+            # Crear un label para mostrar el estado del acceso
+            self.status_label = Label(text='Estado de acceso', size_hint=(1, 0.1), height=30, size_hint_min_y=30, size_hint_max_y=30)   
+            layout.add_widget(self.status_label)
+
+            textinput = TextInput(multiline=False)
+            textinput.size_hint = (1, 0.1)
+            textinput.pos_hint = {'x':0, 'y':0}
+            layout.add_widget(textinput)
+
+
+            # Crear un botón para tomar una foto
+            button = Button(text="Tomar foto")
+            button.size_hint = (1, 0.1)
+            button.pos_hint = {'x':0, 'y':0}
+            button.bind(on_press=self.take_photo)
+            layout.add_widget(button)
+
+            # Abrir la camara
+            self.capture = cv2.VideoCapture(0)
+
+            def update_camera_preview(dt):
+                ret, frame = self.capture.read()
+
+                # Convierta el frame en una textura y muéstrelo en el widget de imagen de Kivy
+                if ret:
+                    buf1 = cv2.flip(frame, 0)
+                    buf = buf1.tostring()
+                    texture = Texture.create(size=(frame.shape[1], frame.shape[0]), colorfmt='bgr')
+                    texture.blit_buffer(buf, colorfmt='bgr', bufferfmt='ubyte')
+                    self.image.texture = texture
+
+            
+            Clock.schedule_interval(update_camera_preview, 1.0/30.0)
+
+            self.add_widget(layout)
+
+                
+        ########################################
+        else:
+            self.clear_widgets()
+            self.add_widget(MenuPrincipal())
+            
+    def take_photo(self, instance):
+        nombre = instance.text
+        ret, frame = self.capture.read()
+        cv2.imwrite('nuevoUsuario.jpg', frame)
+        print("Foto tomada!") 
+
+        image_base_path = Path("./")
+        image_path = image_base_path / "nuevoUsuario.jpg"
+
+        # The only mandatory parameter for a person is images
+        # If id is unspecified, it will be auto-generated
+        # If name is unspecified, it will be set to the person's id
+        person = PersonBase([image_path], name=nombre)
+        person = sdk.persons.create(person)
+
+
 
         
 class MainApp(App):
