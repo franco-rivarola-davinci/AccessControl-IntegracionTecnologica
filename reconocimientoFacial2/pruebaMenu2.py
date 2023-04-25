@@ -46,6 +46,7 @@ class MenuPrincipal(BoxLayout):
         self.clear_widgets()
         self.add_widget(CrearUsuario())
 
+########################################################## CLASS SOLICITARACCESO
 
 class SolicitarAccesoLayout(BoxLayout):
     def __init__(self, **kwargs):
@@ -68,7 +69,6 @@ class SolicitarAccesoLayout(BoxLayout):
         self.status_label = Label(text='Estado de acceso', size_hint=(1, 0.1), height=30, size_hint_min_y=30, size_hint_max_y=30)   
         layout.add_widget(self.status_label)
 
-
         # Crear un botón para tomar una foto
         button = Button(text="Tomar foto")
         button.size_hint = (1, 0.1)
@@ -89,7 +89,6 @@ class SolicitarAccesoLayout(BoxLayout):
                 texture = Texture.create(size=(frame.shape[1], frame.shape[0]), colorfmt='bgr')
                 texture.blit_buffer(buf, colorfmt='bgr', bufferfmt='ubyte')
                 self.image.texture = texture
-
         
         Clock.schedule_interval(update_camera_preview, 1.0/30.0)
 
@@ -99,7 +98,6 @@ class SolicitarAccesoLayout(BoxLayout):
         ret, frame = self.capture.read()
         cv2.imwrite('foto.jpg', frame)
         print("Foto tomada!")
-
 
         personas = sdk.persons.list()
         cantidadPersonas = personas.count 
@@ -111,7 +109,6 @@ class SolicitarAccesoLayout(BoxLayout):
             verification_request = VerificationRequest(person_id, ["foto.jpg"])
             pReq = sdk.search.verify(verification_request)
 
-         
             if pReq.score != 0 :
                 find = True
                 personaEncontrada = pReq.person.name
@@ -121,7 +118,6 @@ class SolicitarAccesoLayout(BoxLayout):
         if not find : 
             self.status_label.text = "No se encontraron coincidencias"
             
-
     def volver_menu_principal(self, instance):
         # Cambiar al layout del menú principal
         self.clear_widgets()
@@ -150,11 +146,15 @@ class SolicitarAccesoLayout(BoxLayout):
             if not find : 
                 self.status_label.text = "No se encontraron coincidencias"
 
+########################################################## CLASS CREARUSUARIO
+
 class CrearUsuario(BoxLayout):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
         layout = BoxLayout(orientation='vertical')
+
+        self.status_name = Label(text='')
 
         # Botón volver al menú anclado arriba
         volver_button = Button(text="Volver al menu")
@@ -181,13 +181,10 @@ class CrearUsuario(BoxLayout):
 
         self.add_widget(layout)
 
-
-
     def volver_menu_principal(self, instance):
         # Cambiar al layout del menú principal
         self.clear_widgets()
         self.add_widget(MenuPrincipal())
-
 
     def verificar_password(self, instance):
         #######################################
@@ -231,8 +228,6 @@ class CrearUsuario(BoxLayout):
             Clock.schedule_interval(update_camera_preview, 1.0/30.0)
             self.add_widget(layout)
 
-                
-        ########################################
         else:
             self.clear_widgets()
             self.add_widget(MenuPrincipal())
@@ -259,11 +254,17 @@ class CrearUsuario(BoxLayout):
         textinput.pos_hint = {'x':0, 'y':0}
         layout.add_widget(textinput)
 
+        self.status_name = Label( size_hint=(1, 0.1), height=30, size_hint_min_y=30, size_hint_max_y=30)
+        self.status_name.size_hint =  (0.5, 0.2)
+        self.status_name.pos_hint =  {'center_x': 0.5, 'center_y': 0.5}
+        layout.add_widget(self.status_name) 
+
         self.add_widget(layout)
 
     def verificar_nombre(self, instance):
          nombre = instance.text
-         if nombre != "":
+         if len(nombre) >= 3:
+
          ### Crear persona
             image_base_path = Path("./")
             image_path = image_base_path / "nuevoUsuario.jpg"
@@ -283,13 +284,18 @@ class CrearUsuario(BoxLayout):
             self.image = Image(source='./nuevoUsuario.jpg')
             layout.add_widget(self.image)
 
-            self.status_label = Label(text='Usuario creado con exito, bienvenido ' + nombre , size_hint=(1, 0.1), height=30, size_hint_min_y=30, size_hint_max_y=30)   
-            layout.add_widget(self.status_label)
-
-
             self.add_widget(layout)
 
+         elif len(nombre) == 0:
+       
+            self.status_name.text = "El nombre no puede estar vacio"
+            print("Nombre error")
+        
+         elif len(nombre) < 3:
+            self.status_name.text = "El nombre debe contener al menos 3 letras"
+            print("Nombre error cantidad")
 
+########################################################## CLASS MAIN
 class MainApp(App):
     def build(self):
         # Crear ScreenManager
@@ -304,7 +310,6 @@ class MainApp(App):
         screen_manager.current = 'menu'
 
         return screen_manager
-
 
 if __name__ == '__main__':
     MainApp().run()
