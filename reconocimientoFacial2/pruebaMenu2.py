@@ -21,20 +21,31 @@ class MenuPrincipal(BoxLayout):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
+        layout = BoxLayout(orientation='vertical')
+
+        spacer = BoxLayout(size_hint_y=(1))   
+        layout.add_widget(spacer)
+
         # Agregar botones
         solicitar_acceso_button = Button(text="Solicitar acceso")
         solicitar_acceso_button.bind(on_press=self.solicitar_acceso)
-        solicitar_acceso_button.size_hint = (1, 0.2)
-        solicitar_acceso_button.pos_hint = {'x':0.5, 'y':0.4}
-    
+        solicitar_acceso_button.size_hint = (0.5, 0.2)
+        solicitar_acceso_button.pos_hint = {'center_x': 0.5, 'center_y': 0.7}
+        layout.add_widget(solicitar_acceso_button)
+
+        spacer = BoxLayout(size_hint_y=(0.1))   
+        layout.add_widget(spacer)
+
         ingresar_usuarios_button = Button(text="Crear usuario")
         ingresar_usuarios_button.bind(on_press=self.crear_usuario)
-        ingresar_usuarios_button.size_hint = (1, 0.2)
-        ingresar_usuarios_button.pos_hint = {'x':0.5, 'y':0.4}
+        ingresar_usuarios_button.size_hint = (0.5, 0.2)
+        ingresar_usuarios_button.pos_hint = {'center_x': 0.5, 'center_y': 0.9}
+        layout.add_widget(ingresar_usuarios_button)
 
-        # Agregar botones al layout
-        self.add_widget(solicitar_acceso_button)
-        self.add_widget(ingresar_usuarios_button)
+        spacer = BoxLayout(size=(1, 1))  # altura de 50 píxeles       
+        layout.add_widget(spacer)
+
+        self.add_widget(layout)
 
     def solicitar_acceso(self, instance):
         # Cambiar al layout de solicitar acceso
