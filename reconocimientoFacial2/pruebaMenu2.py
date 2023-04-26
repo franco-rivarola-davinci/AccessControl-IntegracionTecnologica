@@ -162,13 +162,13 @@ class CrearUsuario(BoxLayout):
         spacer = BoxLayout(size=(1, 1))      
         layout.add_widget(spacer)
 
-        textinput = TextInput(hint_text='Ingrese la contraseña', password = True, multiline=False, padding=(0, 15, 0, 0))
-        textinput.bind(on_text_validate=self.verificar_password)
-        textinput.size_hint = (0.5, 0.2)
-        textinput.pos_hint = {'center_x': 0.5, 'center_y': 0.5}
-        textinput.halign = 'center'
-        textinput.valign = 'middle' 
-        layout.add_widget(textinput)
+        self.passinput = TextInput(hint_text='Ingrese la contraseña', password = True, multiline=False, padding=(0, 15, 0, 0))
+        self.passinput.bind(on_text_validate=self.verificar_password)
+        self.passinput.size_hint = (0.5, 0.2)
+        self.passinput.pos_hint = {'center_x': 0.5, 'center_y': 0.5}
+        self.passinput.halign = 'center'
+        self.passinput.valign = 'middle' 
+        layout.add_widget(self.passinput)
 
         self.status_password = Label( text='Cantidad de intentos : ' + self.count_text + "." ,size_hint=(1, 0.1), height=30, size_hint_min_y=30, size_hint_max_y=30)
         self.status_password.size_hint =  (0.5, 0.2)
@@ -208,6 +208,9 @@ class CrearUsuario(BoxLayout):
             button.bind(on_press=self.take_photo)
             layout.add_widget(button)
 
+            self.status_face_found = Label(text='', size_hint=(1, 0.1), height=30, size_hint_min_y=30, size_hint_max_y=30)   
+            layout.add_widget(self.status_face_found)
+
             self.capture = cv2.VideoCapture(0)
 
             def update_camera_preview(dt):
@@ -228,8 +231,9 @@ class CrearUsuario(BoxLayout):
             self.count -= 1
             self.count_text = str(self.count)
             print(self.count)
-            self.status_password.text='Cantidad de intentos : ' + self.count_text + "."
-
+            self.status_password.text='Cantidad de intentos : ' + self.count_text
+            self.passinput.text = ''
+ 
             if self.count == 0:
                 self.clear_widgets()
                 self.add_widget(MenuPrincipal())
