@@ -1,4 +1,3 @@
-from tkinter import Widget
 import cv2
 import kivy
 from kivy.app import App
@@ -16,6 +15,7 @@ from kivy.uix.screenmanager import Screen, ScreenManager
 from kivy.uix.textinput import TextInput
 from pathlib import Path
 from opencv.fr.persons.schemas import PersonBase
+from opencv.fr.api_error import APIError
 
 class MenuPrincipal(BoxLayout):
     def __init__(self, **kwargs):
@@ -77,7 +77,7 @@ class SolicitarAccesoLayout(BoxLayout):
         layout.add_widget(self.image)
 
         # Crear un label para mostrar el estado del acceso
-        self.status_label = Label(text='Estado de acceso', size_hint=(1, 0.1), height=30, size_hint_min_y=30, size_hint_max_y=30)   
+        self.status_label = Label(text='Estado de acceso.', size_hint=(1, 0.1), height=30, size_hint_min_y=30, size_hint_max_y=30)   
         layout.add_widget(self.status_label)
 
         # Crear un botón para tomar una foto
@@ -118,44 +118,30 @@ class SolicitarAccesoLayout(BoxLayout):
             
             person_id = personas.persons[i].id
             verification_request = VerificationRequest(person_id, ["foto.jpg"])
-            pReq = sdk.search.verify(verification_request)
-
+                   
+            try:
+                pReq = sdk.search.verify(verification_request)
+            except APIError as e:
+                if  e.err_code == 'ERR_NO_FACES_FOUND':
+                    self.status_label.text = "No se encontraron rostros en la foto. Vuelve a intentarlo."
+                    return
+                else:
+                    raise e
+            
             if pReq.score != 0 :
                 find = True
                 personaEncontrada = pReq.person.name
-                self.status_label.text = "Acceso permitido, bienvenido " + personaEncontrada
+                self.status_label.text = "Acceso permitido, bienvenido " + personaEncontrada + "."
                 break
 
         if not find : 
-            self.status_label.text = "No se encontraron coincidencias"
+            self.status_label.text = "No se encontraron coincidencias."
             
     def volver_menu_principal(self, instance):
         # Cambiar al layout del menú principal
         self.clear_widgets()
         self.add_widget(MenuPrincipal())
 
-    def consultar_registro(self, instance):
-        ret, frame = self.capture.read()
-        cv2.imwrite('foto.jpg', frame)
-        print("Foto tomada!")
-
-        personas = sdk.persons.list()
-        cantidadPersonas = personas.count 
-        find = False 
-
-        for i in range(cantidadPersonas):
-            person_id = personas.persons[i].id
-            verification_request = VerificationRequest(person_id, ["foto.jpg"])
-            pReq = sdk.search.verify(verification_request)
-         
-            if pReq.score != 0 :
-                find = True
-                personaEncontrada = pReq.person.name
-                self.status_label.text = "Acceso permitido, bienvenido " + personaEncontrada
-                break
-
-            if not find : 
-                self.status_label.text = "No se encontraron coincidencias"
 
 ########################################################## CLASS CREARUSUARIO
 
@@ -165,7 +151,11 @@ class CrearUsuario(BoxLayout):
 
         layout = BoxLayout(orientation='vertical')
 
+
+        self.count = 3
+        self.count_text = str(self.count)
         self.status_name = Label(text='')
+        self.status_password= Label()
 
         # Botón volver al menú anclado arriba
         volver_button = Button(text="Volver al menu")
@@ -187,6 +177,11 @@ class CrearUsuario(BoxLayout):
         textinput.valign = 'middle' 
         layout.add_widget(textinput)
 
+        self.status_password = Label( text='Cantidad de intentos : ' + self.count_text + "." ,size_hint=(1, 0.1), height=30, size_hint_min_y=30, size_hint_max_y=30)
+        self.status_password.size_hint =  (0.5, 0.2)
+        self.status_password.pos_hint =  {'center_x': 0.5, 'center_y': 0.5}
+        layout.add_widget(self.status_password) 
+
         spacer = BoxLayout(size=(1, 1))  # altura de 50 píxeles       
         layout.add_widget(spacer)
 
@@ -199,6 +194,7 @@ class CrearUsuario(BoxLayout):
 
     def verificar_password(self, instance):
         #######################################
+
         password = instance.text
         if password == "password":
 
@@ -240,8 +236,16 @@ class CrearUsuario(BoxLayout):
             self.add_widget(layout)
 
         else:
-            self.clear_widgets()
-            self.add_widget(MenuPrincipal())
+            self.count -= 1
+            self.count_text = str(self.count)
+            print(self.count)
+            self.status_password.text='Cantidad de intentos : ' + self.count_text + "."
+
+            if self.count == 0:
+                self.clear_widgets()
+                self.add_widget(MenuPrincipal())
+
+            
             
     def take_photo(self, instance):
         
@@ -254,21 +258,29 @@ class CrearUsuario(BoxLayout):
         layout = BoxLayout(orientation='vertical')
 
         volver_button = Button(text="Volver al menu")
-        volver_button.size_hint = (1, 0.1)
-        volver_button.pos_hint = {'x':0, 'y':0}
+        volver_button.size_hint = (1, 0.2)
+        volver_button.pos_hint = {'x': 0, 'top': 1}
         volver_button.bind(on_press=self.volver_menu_principal)
         layout.add_widget(volver_button)
 
-        textinput = TextInput(hint_text="Ingrese su nombre", multiline=False)
+        spacer = BoxLayout(size=(1, 1))      
+        layout.add_widget(spacer)
+
+        textinput = TextInput(hint_text="Ingrese su nombre", multiline=False, padding=(0, 15, 0, 0))
         textinput.bind(on_text_validate=self.verificar_nombre)
-        textinput.size_hint = (1, 0.1)
-        textinput.pos_hint = {'x':0, 'y':0}
+        textinput.size_hint = (0.5, 0.2)
+        textinput.pos_hint = {'center_x': 0.5, 'center_y': 0.5}
+        textinput.halign = 'center'
+        textinput.valign = 'middle' 
         layout.add_widget(textinput)
 
         self.status_name = Label( size_hint=(1, 0.1), height=30, size_hint_min_y=30, size_hint_max_y=30)
         self.status_name.size_hint =  (0.5, 0.2)
         self.status_name.pos_hint =  {'center_x': 0.5, 'center_y': 0.5}
         layout.add_widget(self.status_name) 
+
+        spacer = BoxLayout(size=(1, 1))      
+        layout.add_widget(spacer)
 
         self.add_widget(layout)
 
@@ -295,15 +307,18 @@ class CrearUsuario(BoxLayout):
             self.image = Image(source='./nuevoUsuario.jpg')
             layout.add_widget(self.image)
 
+            self.user_label = Label(text='Usuario creado con exito, bienvenido ' + nombre + ".", size_hint=(1, 0.1), height=30, size_hint_min_y=30, size_hint_max_y=30)   
+            layout.add_widget(self.user_label)
+
             self.add_widget(layout)
 
          elif len(nombre) == 0:
        
-            self.status_name.text = "El nombre no puede estar vacio"
+            self.status_name.text = "El nombre no puede estar vacio."
             print("Nombre error")
         
          elif len(nombre) < 3:
-            self.status_name.text = "El nombre debe contener al menos 3 letras"
+            self.status_name.text = "El nombre debe contener al menos 3 letras."
             print("Nombre error cantidad")
 
 ########################################################## CLASS MAIN
@@ -324,3 +339,4 @@ class MainApp(App):
 
 if __name__ == '__main__':
     MainApp().run()
+
