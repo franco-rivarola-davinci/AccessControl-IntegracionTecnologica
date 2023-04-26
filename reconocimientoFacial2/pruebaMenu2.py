@@ -26,7 +26,6 @@ class MenuPrincipal(BoxLayout):
         spacer = BoxLayout(size_hint_y=(1))   
         layout.add_widget(spacer)
 
-        # Agregar botones
         solicitar_acceso_button = Button(text="Solicitar acceso")
         solicitar_acceso_button.bind(on_press=self.solicitar_acceso)
         solicitar_acceso_button.size_hint = (0.5, 0.2)
@@ -42,18 +41,18 @@ class MenuPrincipal(BoxLayout):
         ingresar_usuarios_button.pos_hint = {'center_x': 0.5, 'center_y': 0.9}
         layout.add_widget(ingresar_usuarios_button)
 
-        spacer = BoxLayout(size=(1, 1))  # altura de 50 píxeles       
+        spacer = BoxLayout(size=(1, 1)) 
         layout.add_widget(spacer)
 
         self.add_widget(layout)
 
     def solicitar_acceso(self, instance):
-        # Cambiar al layout de solicitar acceso
+       
         self.clear_widgets()
         self.add_widget(SolicitarAccesoLayout())
     
     def crear_usuario(self, instance):
-        # Aquí se puede incluir la lógica para pedir la contraseña
+        
         self.clear_widgets()
         self.add_widget(CrearUsuario())
 
@@ -65,29 +64,27 @@ class SolicitarAccesoLayout(BoxLayout):
 
         layout = BoxLayout(orientation='vertical')
 
-        # Agregar botón para volver al menú principal
+       
         volver_button = Button(text="Volver al menú")
         volver_button.size_hint = (1, 0.1)
         volver_button.pos_hint = {'x':0, 'y':0}
         volver_button.bind(on_press=self.volver_menu_principal)
         layout.add_widget(volver_button)
 
-        # Cree un widget de imagen para mostrar la vista previa de la cámara
+        
         self.image = Image()
         layout.add_widget(self.image)
 
-        # Crear un label para mostrar el estado del acceso
+       
         self.status_label = Label(text='Estado de acceso.', size_hint=(1, 0.1), height=30, size_hint_min_y=30, size_hint_max_y=30)   
         layout.add_widget(self.status_label)
-
-        # Crear un botón para tomar una foto
+        
         button = Button(text="Tomar foto")
         button.size_hint = (1, 0.1)
         button.pos_hint = {'x':0, 'y':0}
         button.bind(on_press=self.take_photo)
         layout.add_widget(button)
 
-        # Abrir la camara
         self.capture = cv2.VideoCapture(0)
 
         def update_camera_preview(dt):
@@ -138,7 +135,7 @@ class SolicitarAccesoLayout(BoxLayout):
             self.status_label.text = "No se encontraron coincidencias."
             
     def volver_menu_principal(self, instance):
-        # Cambiar al layout del menú principal
+
         self.clear_widgets()
         self.add_widget(MenuPrincipal())
 
@@ -151,24 +148,20 @@ class CrearUsuario(BoxLayout):
 
         layout = BoxLayout(orientation='vertical')
 
-
         self.count = 3
         self.count_text = str(self.count)
         self.status_name = Label(text='')
         self.status_password= Label()
 
-        # Botón volver al menú anclado arriba
         volver_button = Button(text="Volver al menu")
         volver_button.size_hint = (1, 0.2)
         volver_button.pos_hint = {'x': 0, 'top': 1}
         volver_button.bind(on_press=self.volver_menu_principal)
         layout.add_widget(volver_button)
 
-        # Espacio vacío con una altura de 50dp
-        spacer = BoxLayout(size=(1, 1))  # altura de 50 píxeles       
+        spacer = BoxLayout(size=(1, 1))      
         layout.add_widget(spacer)
 
-        # TextInput centrado
         textinput = TextInput(hint_text='Ingrese la contraseña', password = True, multiline=False, padding=(0, 15, 0, 0))
         textinput.bind(on_text_validate=self.verificar_password)
         textinput.size_hint = (0.5, 0.2)
@@ -182,18 +175,17 @@ class CrearUsuario(BoxLayout):
         self.status_password.pos_hint =  {'center_x': 0.5, 'center_y': 0.5}
         layout.add_widget(self.status_password) 
 
-        spacer = BoxLayout(size=(1, 1))  # altura de 50 píxeles       
+        spacer = BoxLayout(size=(1, 1))     
         layout.add_widget(spacer)
 
         self.add_widget(layout)
 
     def volver_menu_principal(self, instance):
-        # Cambiar al layout del menú principal
+
         self.clear_widgets()
         self.add_widget(MenuPrincipal())
 
     def verificar_password(self, instance):
-        #######################################
 
         password = instance.text
         if password == "password":
@@ -207,18 +199,15 @@ class CrearUsuario(BoxLayout):
             volver_button.bind(on_press=self.volver_menu_principal)
             layout.add_widget(volver_button)
                 
-            # Cree un widget de imagen para mostrar la vista previa de la cámara
             self.image = Image()
             layout.add_widget(self.image)
 
-            # Crear un botón para tomar una foto
             button = Button(text="Tomar foto")
             button.size_hint = (1, 0.1)
             button.pos_hint = {'x':0, 'y':0}
             button.bind(on_press=self.take_photo)
             layout.add_widget(button)
 
-            # Abrir la camara
             self.capture = cv2.VideoCapture(0)
 
             def update_camera_preview(dt):
@@ -288,7 +277,6 @@ class CrearUsuario(BoxLayout):
          nombre = instance.text
          if len(nombre) >= 3:
 
-         ### Crear persona
             image_base_path = Path("./")
             image_path = image_base_path / "nuevoUsuario.jpg"
             person = PersonBase([image_path], name=nombre)
